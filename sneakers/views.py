@@ -1,9 +1,9 @@
+from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import Sneakerserializer
 from .models import Sneaker
-from sneakers import serializers
 
 @api_view(['GET', 'POST'])
 def sneakers_list(request):
@@ -17,12 +17,14 @@ def sneakers_list(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-@api_view(['GET'])
+@api_view(['GET', 'PUT'])
 def sneaker_detail(request, pk):
-    try:
-        sneaker = Sneaker.objects.get(pk=pk)
+    sneaker = get_object_or_404(Sneaker, pk=pk)
+    if request.method == 'GET':     
         serializer = Sneakerserializer(sneaker);
         return Response(serializer.data)
-
-    except Sneaker.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND);
+    elif request.method == 'PUT':
+        serializer = Sneakerserializer(sneaker, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
